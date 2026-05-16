@@ -1,151 +1,104 @@
+// frontend/src/store/authStore.ts
+
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+
 import { supabase } from "@/lib/supabase";
 import { authService } from "@/services/auth.service";
+
 import type { AuthStore } from "@/types/auth.types";
 
 export const useAuthStore = create<AuthStore>()(
   persist(
     (set) => ({
-      // ─────────────────────────────────────────────
-      // STATE
-      // ─────────────────────────────────────────────
+      // ─────────────────────────────────────────────────────────────
+      // State
+      // ─────────────────────────────────────────────────────────────
       user: null,
       isAuthenticated: false,
       isLoading: false,
       isInitialized: false,
       error: null,
 
-      // ─────────────────────────────────────────────
-      // INITIALIZE AUTH
-      // ─────────────────────────────────────────────
+      // ─────────────────────────────────────────────────────────────
+      // Initialize Auth
+      // ─────────────────────────────────────────────────────────────
       initializeAuth: async () => {
         try {
-          console.log("INIT AUTH START");
+          set({ isLoading: true });
+
+          // Restore existing session
+          const { user } = await authService.getSession();
 
           set({
-            isLoading: true,
-          });
-
-          // Restore session
-          const result =
-            await authService.getSession();
-
-          console.log(
-            "SESSION RESULT:",
-            result
-          );
-
-          set({
-            user: result.user,
-            isAuthenticated: !!result.user,
+            user,
+            isAuthenticated: !!user,
             isInitialized: true,
             isLoading: false,
             error: null,
           });
 
-          // Listen for auth changes
-          supabase.auth.onAuthStateChange(
-            async (_event, session) => {
+          // Listen for auth state changes
+          supabase.auth.onAuthStateChange((event, session) => {
+            if (event === "SIGNED_IN" && session?.user) {
+              const mappedUser = {
+                id: session.user.id,
+                email: session.user.email ?? "",
+                name:
+                  session.user.user_metadata?.name ??
+                  session.user.email?.split("@")[0] ??
+                  "User",
+                avatar_url: session.user.user_metadata?.avatar_url,
+                created_at: session.user.created_at,
+              };
 
-              console.log(
-                "AUTH EVENT:",
-                _event,
-                session
-              );
-
-              // Session exists
-              if (session?.user) {
-
-                const mappedUser = {
-                  id: session.user.id,
-
-                  email:
-                    session.user.email ?? "",
-
-                  name:
-                    session.user.user_metadata
-                      ?.name ??
-                    session.user.email?.split(
-                      "@"
-                    )[0] ??
-                    "User",
-
-                  avatar_url:
-                    session.user.user_metadata
-                      ?.avatar_url ?? null,
-
-                  created_at:
-                    session.user.created_at,
-                };
-
-                set({
-                  user: mappedUser,
-                  isAuthenticated: true,
-                  isInitialized: true,
-                  isLoading: false,
-                  error: null,
-                });
-
-                return;
-              }
-
-              // No session
               set({
-                user: null,
-                isAuthenticated: false,
-                isInitialized: true,
-                isLoading: false,
+                user: mappedUser,
+                isAuthenticated: true,
                 error: null,
               });
             }
-          );
-        } catch (err: any) {
 
-          console.error(
-            "AUTH INIT ERROR:",
-            err
-          );
+            if (event === "SIGNED_OUT") {
+              set({
+                user: null,
+                isAuthenticated: false,
+                error: null,
+              });
+            }
+          });
+        } catch (err) {
+          console.error("Auth initialization failed:", err);
 
           set({
             user: null,
             isAuthenticated: false,
             isInitialized: true,
             isLoading: false,
-            error:
-              err?.message ??
-              "Failed to initialize auth",
+            error: "Failed to initialize authentication",
           });
         }
       },
 
-      // ─────────────────────────────────────────────
-      // LOGIN
-      // ─────────────────────────────────────────────
-      login: async (
-        email: string,
-        password: string
-      ) => {
+      // ─────────────────────────────────────────────────────────────
+      // Login
+      // ─────────────────────────────────────────────────────────────
+      login: async (email: string, password: string) => {
         try {
-
           set({
             isLoading: true,
             error: null,
           });
 
-          const {
-            user,
-            error,
-          } = await authService.login(
+          const { user, error } = await authService.login(
             email,
             password
           );
 
           if (error) {
-
             set({
-              error,
               isLoading: false,
+              error,
             });
 
             return;
@@ -153,53 +106,41 @@ export const useAuthStore = create<AuthStore>()(
 
           set({
             user,
-            isAuthenticated: !!user,
-            isInitialized: true,
+            isAuthenticated: true,
             isLoading: false,
             error: null,
           });
-
-        } catch (err: any) {
+        } catch (err) {
+          console.error("Login failed:", err);
 
           set({
-            error:
-              err?.message ??
-              "Login failed",
-
             isLoading: false,
+            error: "Something went wrong during login",
           });
         }
       },
 
-      // ─────────────────────────────────────────────
-      // SIGNUP
-      // ─────────────────────────────────────────────
+      // ─────────────────────────────────────────────────────────────
+      // Signup
+      // ─────────────────────────────────────────────────────────────
       signup: async (
         email: string,
         password: string,
         name: string
       ) => {
         try {
-
           set({
             isLoading: true,
             error: null,
           });
 
-          const {
-            user,
-            error,
-          } = await authService.signup(
-            email,
-            password,
-            name
-          );
+          const { user, error } =
+            await authService.signup(email, password, name);
 
           if (error) {
-
             set({
-              error,
               isLoading: false,
+              error,
             });
 
             return;
@@ -208,29 +149,24 @@ export const useAuthStore = create<AuthStore>()(
           set({
             user,
             isAuthenticated: !!user,
-            isInitialized: true,
             isLoading: false,
             error: null,
           });
-
-        } catch (err: any) {
+        } catch (err) {
+          console.error("Signup failed:", err);
 
           set({
-            error:
-              err?.message ??
-              "Signup failed",
-
             isLoading: false,
+            error: "Something went wrong during signup",
           });
         }
       },
 
-      // ─────────────────────────────────────────────
-      // LOGOUT
-      // ─────────────────────────────────────────────
+      // ─────────────────────────────────────────────────────────────
+      // Logout
+      // ─────────────────────────────────────────────────────────────
       logout: async () => {
         try {
-
           set({
             isLoading: true,
           });
@@ -240,43 +176,36 @@ export const useAuthStore = create<AuthStore>()(
           set({
             user: null,
             isAuthenticated: false,
-            isInitialized: true,
             isLoading: false,
             error: null,
           });
-
-        } catch (err: any) {
+        } catch (err) {
+          console.error("Logout failed:", err);
 
           set({
-            error:
-              err?.message ??
-              "Logout failed",
-
             isLoading: false,
+            error: "Failed to logout",
           });
         }
       },
 
-      // ─────────────────────────────────────────────
-      // CLEAR ERROR
-      // ─────────────────────────────────────────────
-      clearError: () =>
+      // ─────────────────────────────────────────────────────────────
+      // Clear Error
+      // ─────────────────────────────────────────────────────────────
+      clearError: () => {
         set({
           error: null,
-        }),
+        });
+      },
     }),
-
     {
-      name: "peblo-auth-store",
+      name: "ai-notes-auth-store",
 
-      storage: createJSONStorage(
-        () => localStorage
-      ),
+      storage: createJSONStorage(() => localStorage),
 
       partialize: (state) => ({
         user: state.user,
-        isAuthenticated:
-          state.isAuthenticated,
+        isAuthenticated: state.isAuthenticated,
       }),
     }
   )
