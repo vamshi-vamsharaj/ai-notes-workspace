@@ -1,51 +1,154 @@
-// frontend/src/App.tsx
 import { useEffect } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+
 import { useAuthStore } from "@/store/authStore";
+
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import LoginPage from "@/pages/LoginPage";
-import SignupPage from "@/pages/SignupPage";
-import DashboardPage from "@/pages/DashboardPage";
+import { PublicRoute } from "@/components/auth/PublicRoute";
+
+import { AppLayout } from "@/components/layout/AppLayout";
+
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
+import LoginPage from "@/pages/LoginPage";
+import SignupPage from "@/pages/SignupPage";
+
+import { DashboardPage } from "@/pages/DashboardPage";
+import { NotesPage } from "@/pages/NotesPage";
+import { NoteEditorPage } from "@/pages/NoteEditorPage";
+
 function App() {
-  const { initializeAuth, isInitialized } = useAuthStore();
+
+  const initializeAuth =
+    useAuthStore(
+      (state) => state.initializeAuth
+    );
+
+  const isInitialized =
+    useAuthStore(
+      (state) => state.isInitialized
+    );
 
   useEffect(() => {
-    // Run once on startup — restores session and sets up auth listener
+
     initializeAuth();
+
+    // IMPORTANT:
+    // empty dependency array
+    // prevents infinite auth loops
+
   }, []);
 
-  // Block the entire app render until we know the auth state
-  // Prevents routing to wrong page on first load
+  // Wait for auth hydration
   if (!isInitialized) {
     return (
-      <div className="min-h-screen bg-[#07070d] flex items-center justify-center">
-        <LoadingSpinner size="lg" message="Loading workspace..." />
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0f]">
+        <LoadingSpinner />
       </div>
     );
   }
 
   return (
     <BrowserRouter>
-      <Routes>
-        {/* Public routes */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
 
-        {/* Protected routes */}
+      <Routes>
+
+        {/* PUBLIC */}
+
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <LoginPage />
+            </PublicRoute>
+          }
+        />
+
+        <Route
+          path="/signup"
+          element={
+            <PublicRoute>
+              <SignupPage />
+            </PublicRoute>
+          }
+        />
+
+        {/* PROTECTED */}
+
         <Route
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <DashboardPage />
+              <AppLayout>
+                <DashboardPage />
+              </AppLayout>
             </ProtectedRoute>
           }
         />
 
-        {/* Catch-all redirect */}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route
+          path="/notes"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <NotesPage />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/notes/archived"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <NotesPage />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/notes/:id"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <NoteEditorPage />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* DEFAULT */}
+
+        <Route
+          path="/"
+          element={
+            <Navigate
+              to="/dashboard"
+              replace
+            />
+          }
+        />
+
+        <Route
+          path="*"
+          element={
+            <Navigate
+              to="/dashboard"
+              replace
+            />
+          }
+        />
+
       </Routes>
+
     </BrowserRouter>
   );
 }

@@ -1,4 +1,3 @@
-// frontend/src/store/authStore.ts
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { supabase } from "@/lib/supabase";
@@ -7,116 +6,277 @@ import type { AuthStore } from "@/types/auth.types";
 
 export const useAuthStore = create<AuthStore>()(
   persist(
-    (set, get) => ({
-      // ─── State ────────────────────────────────────────────────────────────
+    (set) => ({
+      // ─────────────────────────────────────────────
+      // STATE
+      // ─────────────────────────────────────────────
       user: null,
       isAuthenticated: false,
       isLoading: false,
       isInitialized: false,
       error: null,
 
-      // ─── Actions ──────────────────────────────────────────────────────────
-
-      /**
-       * Called once on app startup (in App.tsx).
-       * Restores session from localStorage and sets up auth listener.
-       *
-       * Why onAuthStateChange?
-       * Supabase fires this whenever the token changes — login, logout,
-       * token refresh, or another tab changes auth state. This keeps
-       * all tabs in sync without polling.
-       */
+      // ─────────────────────────────────────────────
+      // INITIALIZE AUTH
+      // ─────────────────────────────────────────────
       initializeAuth: async () => {
-        // Restore existing session
-        const { user, error } = await authService.getSession();
+        try {
+          console.log("INIT AUTH START");
 
-        set({
-          user,
-          isAuthenticated: !!user,
-          isInitialized: true,
-          error: null,
-        });
+          set({
+            isLoading: true,
+          });
 
-        // Listen for auth state changes (token refresh, other tabs, etc.)
-        supabase.auth.onAuthStateChange(async (event, session) => {
-          if (event === "SIGNED_IN" && session?.user) {
-            const mappedUser = {
-              id: session.user.id,
-              email: session.user.email ?? "",
-              name:
-                session.user.user_metadata?.name ??
-                session.user.email?.split("@")[0] ??
-                "User",
-              avatar_url: session.user.user_metadata?.avatar_url,
-              created_at: session.user.created_at,
-            };
-            set({ user: mappedUser, isAuthenticated: true });
-          } else if (event === "SIGNED_OUT") {
-            set({ user: null, isAuthenticated: false });
-          } else if (event === "TOKEN_REFRESHED" && session?.user) {
-            // Token was silently refreshed — no action needed, Supabase handles it
+          // Restore session
+          const result =
+            await authService.getSession();
+
+          console.log(
+            "SESSION RESULT:",
+            result
+          );
+
+          set({
+            user: result.user,
+            isAuthenticated: !!result.user,
+            isInitialized: true,
+            isLoading: false,
+            error: null,
+          });
+
+          // Listen for auth changes
+          supabase.auth.onAuthStateChange(
+            async (_event, session) => {
+
+              console.log(
+                "AUTH EVENT:",
+                _event,
+                session
+              );
+
+              // Session exists
+              if (session?.user) {
+
+                const mappedUser = {
+                  id: session.user.id,
+
+                  email:
+                    session.user.email ?? "",
+
+                  name:
+                    session.user.user_metadata
+                      ?.name ??
+                    session.user.email?.split(
+                      "@"
+                    )[0] ??
+                    "User",
+
+                  avatar_url:
+                    session.user.user_metadata
+                      ?.avatar_url ?? null,
+
+                  created_at:
+                    session.user.created_at,
+                };
+
+                set({
+                  user: mappedUser,
+                  isAuthenticated: true,
+                  isInitialized: true,
+                  isLoading: false,
+                  error: null,
+                });
+
+                return;
+              }
+
+              // No session
+              set({
+                user: null,
+                isAuthenticated: false,
+                isInitialized: true,
+                isLoading: false,
+                error: null,
+              });
+            }
+          );
+        } catch (err: any) {
+
+          console.error(
+            "AUTH INIT ERROR:",
+            err
+          );
+
+          set({
+            user: null,
+            isAuthenticated: false,
+            isInitialized: true,
+            isLoading: false,
+            error:
+              err?.message ??
+              "Failed to initialize auth",
+          });
+        }
+      },
+
+      // ─────────────────────────────────────────────
+      // LOGIN
+      // ─────────────────────────────────────────────
+      login: async (
+        email: string,
+        password: string
+      ) => {
+        try {
+
+          set({
+            isLoading: true,
+            error: null,
+          });
+
+          const {
+            user,
+            error,
+          } = await authService.login(
+            email,
+            password
+          );
+
+          if (error) {
+
+            set({
+              error,
+              isLoading: false,
+            });
+
+            return;
           }
-        });
-      },
 
-      login: async (email: string, password: string) => {
-        set({ isLoading: true, error: null });
+          set({
+            user,
+            isAuthenticated: !!user,
+            isInitialized: true,
+            isLoading: false,
+            error: null,
+          });
 
-        const { user, error } = await authService.login(email, password);
+        } catch (err: any) {
 
-        if (error) {
-          set({ isLoading: false, error });
-          return;
+          set({
+            error:
+              err?.message ??
+              "Login failed",
+
+            isLoading: false,
+          });
         }
-
-        set({
-          user,
-          isAuthenticated: true,
-          isLoading: false,
-          error: null,
-        });
       },
 
-      signup: async (email: string, password: string, name: string) => {
-        set({ isLoading: true, error: null });
+      // ─────────────────────────────────────────────
+      // SIGNUP
+      // ─────────────────────────────────────────────
+      signup: async (
+        email: string,
+        password: string,
+        name: string
+      ) => {
+        try {
 
-        const { user, error } = await authService.signup(email, password, name);
+          set({
+            isLoading: true,
+            error: null,
+          });
 
-        if (error) {
-          set({ isLoading: false, error });
-          return;
+          const {
+            user,
+            error,
+          } = await authService.signup(
+            email,
+            password,
+            name
+          );
+
+          if (error) {
+
+            set({
+              error,
+              isLoading: false,
+            });
+
+            return;
+          }
+
+          set({
+            user,
+            isAuthenticated: !!user,
+            isInitialized: true,
+            isLoading: false,
+            error: null,
+          });
+
+        } catch (err: any) {
+
+          set({
+            error:
+              err?.message ??
+              "Signup failed",
+
+            isLoading: false,
+          });
         }
-
-        set({
-          user,
-          isAuthenticated: !!user,
-          isLoading: false,
-          error: null,
-        });
       },
 
+      // ─────────────────────────────────────────────
+      // LOGOUT
+      // ─────────────────────────────────────────────
       logout: async () => {
-        set({ isLoading: true });
+        try {
 
-        await authService.logout();
+          set({
+            isLoading: true,
+          });
 
-        set({
-          user: null,
-          isAuthenticated: false,
-          isLoading: false,
-          error: null,
-        });
+          await authService.logout();
+
+          set({
+            user: null,
+            isAuthenticated: false,
+            isInitialized: true,
+            isLoading: false,
+            error: null,
+          });
+
+        } catch (err: any) {
+
+          set({
+            error:
+              err?.message ??
+              "Logout failed",
+
+            isLoading: false,
+          });
+        }
       },
 
-      clearError: () => set({ error: null }),
+      // ─────────────────────────────────────────────
+      // CLEAR ERROR
+      // ─────────────────────────────────────────────
+      clearError: () =>
+        set({
+          error: null,
+        }),
     }),
+
     {
       name: "peblo-auth-store",
-      storage: createJSONStorage(() => localStorage),
-      // Only persist the user — don't persist loading/error states
+
+      storage: createJSONStorage(
+        () => localStorage
+      ),
+
       partialize: (state) => ({
         user: state.user,
-        isAuthenticated: state.isAuthenticated,
+        isAuthenticated:
+          state.isAuthenticated,
       }),
     }
   )
