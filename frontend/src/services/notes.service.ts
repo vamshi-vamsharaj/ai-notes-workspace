@@ -2,7 +2,6 @@
 import api from './api'
 import type {
   Note,
-  NoteListItem,
   CreateNotePayload,
   UpdateNotePayload,
   NotesFilter,

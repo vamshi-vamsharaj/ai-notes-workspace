@@ -10,7 +10,6 @@ import { useAuthStore } from '@/store/authStore'
 import { useNotesStore } from '@/store/notesStore'
 import { NoteCard } from '@/components/notes/NoteCard'
 import { NotesSkeleton } from '@/components/notes/NotesSkeleton'
-import { formatRelativeTime } from '@/lib/utils'
 
 const stagger = {
   container: {

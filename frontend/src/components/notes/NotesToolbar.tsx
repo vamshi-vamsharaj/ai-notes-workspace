@@ -8,7 +8,7 @@
 // 4. Clear button resets both search and tag filters
 
 import { useNotesStore } from '@/store/notesStore'
-import { X, SlidersHorizontal } from 'lucide-react'
+import { X } from 'lucide-react'
 import type { NotesFilter } from '@/types/notes.types'
 
 interface NotesToolbarProps {
