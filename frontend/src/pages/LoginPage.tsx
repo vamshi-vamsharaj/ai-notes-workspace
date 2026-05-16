@@ -1,175 +1,288 @@
 // frontend/src/pages/LoginPage.tsx
-import { useState, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useAuthStore } from "@/store/authStore";
-import type { LoginFormData } from "@/types/auth.types";
+import { useState, useEffect } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import { Eye, EyeOff, ArrowRight, Zap, Lock, Sparkles } from 'lucide-react'
+import { useAuthStore } from '@/store/authStore'
+import type { LoginFormData } from '@/types/auth.types'
+
+const features = [
+  { icon: Sparkles, label: 'AI-powered summaries', desc: 'One click to extract insights from any note' },
+  { icon: Zap, label: 'Instant search', desc: 'Find anything across all your notes instantly' },
+  { icon: Lock, label: 'Private by default', desc: 'Share only what you want, with anyone' },
+]
 
 const LoginPage = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { login, isLoading, isAuthenticated, error, clearError } = useAuthStore();
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { login, isLoading, isAuthenticated, error, clearError } = useAuthStore()
+  const from = (location.state as any)?.from?.pathname || '/dashboard'
 
-  const from = (location.state as any)?.from?.pathname || "/dashboard";
-
-  const [formData, setFormData] = useState<LoginFormData>({
-    email: "",
-    password: "",
-  });
-
-  const [formErrors, setFormErrors] = useState<Partial<LoginFormData>>({});
+  const [formData, setFormData] = useState<LoginFormData>({ email: '', password: '' })
+  const [formErrors, setFormErrors] = useState<Partial<LoginFormData>>({})
+  const [showPassword, setShowPassword] = useState(false)
+  const [focusedField, setFocusedField] = useState<string | null>(null)
 
   useEffect(() => {
-    if (isAuthenticated) navigate(from, { replace: true });
-  }, [isAuthenticated]);
-
-  useEffect(() => {
-    return () => clearError();
-  }, []);
+  if (isAuthenticated) {
+    navigate(from, { replace: true })
+  }
+}, [isAuthenticated, navigate, from])
+  useEffect(() => () => clearError(), [])
 
   const validate = (): boolean => {
-    const errors: Partial<LoginFormData> = {};
-    if (!formData.email) errors.email = "Email is required";
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) errors.email = "Enter a valid email";
-    if (!formData.password) errors.password = "Password is required";
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
+    const errors: Partial<LoginFormData> = {}
+    if (!formData.email) errors.email = 'Email is required'
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) errors.email = 'Enter a valid email'
+    if (!formData.password) errors.password = 'Password is required'
+    setFormErrors(errors)
+    return Object.keys(errors).length === 0
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validate()) return;
-    await login(formData.email, formData.password);
-  };
+    e.preventDefault()
+    if (!validate()) return
+await login(formData.email, formData.password)
+
+console.log("LOGIN STATE:", useAuthStore.getState())
+  }
 
   return (
-    <div className="min-h-screen bg-[#07070d] flex">
-      {/* Left — Branding Panel */}
-      <div className="hidden lg:flex w-1/2 flex-col justify-between p-12 bg-gradient-to-br from-[#0d0d1a] to-[#07070d] border-r border-white/5">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-violet-500 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">P</span>
-          </div>
-          <span className="text-white font-semibold tracking-tight">Peblo AI Notes</span>
-        </div>
+    <div className="min-h-screen flex" style={{ background: 'var(--bg-base)' }}>
+      {/* ─── Left branding panel ─── */}
+      <div
+        className="hidden lg:flex w-[420px] xl:w-[480px] shrink-0 flex-col justify-between p-10 relative overflow-hidden"
+        style={{ background: 'var(--bg-surface)', borderRight: '1px solid var(--border-subtle)' }}
+      >
+        {/* Dot grid bg */}
+        <div className="absolute inset-0 dot-grid opacity-40" />
 
-        <div>
-          <blockquote className="text-3xl font-light text-white/80 leading-relaxed mb-6">
-            "Your thoughts, organized.
-            <br />
-            Your ideas, amplified."
-          </blockquote>
-          <div className="flex gap-4">
-            {["AI Summaries", "Action Items", "Smart Search"].map((tag) => (
-              <span
-                key={tag}
-                className="text-xs text-violet-400 border border-violet-500/30 rounded-full px-3 py-1"
+        {/* Glow orb */}
+        <div
+          className="absolute -top-32 -left-32 w-80 h-80 rounded-full blur-3xl pointer-events-none"
+          style={{ background: 'rgba(124,58,237,0.12)' }}
+        />
+
+        {/* Logo */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="relative flex items-center gap-3"
+        >
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center"
+            style={{ background: 'linear-gradient(135deg, #7c3aed, #4c1d95)' }}
+          >
+            <span className="text-white font-bold text-sm serif italic">N</span>
+          </div>
+          <div>
+            <span className="text-white font-semibold tracking-tight">NoteFlow</span>
+            <span
+              className="ml-2 text-xs px-1.5 py-0.5 rounded-md font-medium"
+              style={{ background: 'rgba(124,58,237,0.2)', color: 'var(--accent-violet-bright)' }}
+            >
+              AI
+            </span>
+          </div>
+        </motion.div>
+
+        {/* Main copy */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="relative"
+        >
+          <p className="text-xs font-medium uppercase tracking-widest mb-4" style={{ color: 'var(--text-tertiary)' }}>
+            Your AI workspace
+          </p>
+          <h2 className="text-3xl font-light leading-tight mb-2" style={{ color: 'var(--text-primary)' }}>
+            Think clearly.
+          </h2>
+          <h2 className="text-3xl leading-tight mb-8" style={{ color: 'var(--text-primary)' }}>
+            <span className="serif italic" style={{ color: 'var(--accent-violet-bright)' }}>Write</span> freely.
+          </h2>
+
+          <div className="space-y-4">
+            {features.map(({ icon: Icon, label, desc }, i) => (
+              <motion.div
+                key={label}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: 0.3 + i * 0.08 }}
+                className="flex items-start gap-3"
               >
-                {tag}
-              </span>
+                <div
+                  className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
+                  style={{ background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.2)' }}
+                >
+                  <Icon size={13} style={{ color: 'var(--accent-violet-bright)' }} />
+                </div>
+                <div>
+                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{label}</p>
+                  <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{desc}</p>
+                </div>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
 
-        <p className="text-white/20 text-sm">© 2026 Peblo · Built for clarity</p>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          className="relative text-xs"
+          style={{ color: 'var(--text-tertiary)' }}
+        >
+          © 2026 NoteFlow · Built for clarity
+        </motion.p>
       </div>
 
-      {/* Right — Auth Form */}
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="w-full max-w-sm">
+      {/* ─── Right: auth form ─── */}
+      <div className="flex-1 flex items-center justify-center p-6">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
+          className="w-full max-w-sm"
+        >
           {/* Mobile logo */}
-          <div className="flex items-center gap-2 mb-10 lg:hidden">
-            <div className="w-7 h-7 bg-violet-500 rounded-md flex items-center justify-center">
-              <span className="text-white font-bold text-xs">P</span>
+          <div className="flex items-center gap-2.5 mb-10 lg:hidden">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #7c3aed, #4c1d95)' }}>
+              <span className="text-white font-bold text-sm serif italic">N</span>
             </div>
-            <span className="text-white font-semibold">Peblo AI Notes</span>
+            <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>NoteFlow</span>
           </div>
 
-          <h1 className="text-2xl font-semibold text-white mb-1 tracking-tight">
+          <h1 className="text-xl font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
             Welcome back
           </h1>
-          <p className="text-white/40 text-sm mb-8">Sign in to your workspace</p>
+          <p className="text-sm mb-8" style={{ color: 'var(--text-tertiary)' }}>
+            Sign in to your workspace
+          </p>
 
-          {/* Global error */}
+          {/* Error */}
           {error && (
-            <div className="mb-6 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-              <p className="text-red-400 text-sm">{error}</p>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="mb-5 px-3.5 py-3 rounded-xl text-sm"
+              style={{
+                background: 'rgba(239,68,68,0.07)',
+                border: '1px solid rgba(239,68,68,0.2)',
+                color: '#fca5a5',
+              }}
+            >
+              {error}
+            </motion.div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Email */}
             <div>
-              <label className="block text-xs text-white/50 mb-1.5 font-medium uppercase tracking-wider">
-                Email
+              <label className="block text-xs font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                Email address
               </label>
               <input
                 type="email"
                 value={formData.email}
                 onChange={(e) => {
-                  setFormData((p) => ({ ...p, email: e.target.value }));
-                  setFormErrors((p) => ({ ...p, email: undefined }));
-                  clearError();
+                  setFormData((p) => ({ ...p, email: e.target.value }))
+                  setFormErrors((p) => ({ ...p, email: undefined }))
+                  clearError()
                 }}
+                onFocus={() => setFocusedField('email')}
+                onBlur={() => setFocusedField(null)}
                 placeholder="you@example.com"
-                className={`w-full bg-white/5 border rounded-lg px-4 py-3 text-white text-sm placeholder-white/20 outline-none transition-all focus:border-violet-500/60 focus:bg-white/8 ${
-                  formErrors.email ? "border-red-500/50" : "border-white/10"
-                }`}
+                className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none transition-all duration-200"
+                style={{
+                  background: 'var(--bg-elevated)',
+                  border: `1px solid ${formErrors.email ? 'rgba(239,68,68,0.5)' : focusedField === 'email' ? 'rgba(124,58,237,0.5)' : 'var(--border-default)'}`,
+                  color: 'var(--text-primary)',
+                  boxShadow: focusedField === 'email' ? '0 0 0 3px rgba(124,58,237,0.08)' : 'none',
+                }}
               />
               {formErrors.email && (
-                <p className="text-red-400 text-xs mt-1">{formErrors.email}</p>
+                <p className="text-xs mt-1.5" style={{ color: '#f87171' }}>{formErrors.email}</p>
               )}
             </div>
 
+            {/* Password */}
             <div>
-              <label className="block text-xs text-white/50 mb-1.5 font-medium uppercase tracking-wider">
+              <label className="block text-xs font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
                 Password
               </label>
-              <input
-                type="password"
-                value={formData.password}
-                onChange={(e) => {
-                  setFormData((p) => ({ ...p, password: e.target.value }));
-                  setFormErrors((p) => ({ ...p, password: undefined }));
-                  clearError();
-                }}
-                placeholder="••••••••"
-                className={`w-full bg-white/5 border rounded-lg px-4 py-3 text-white text-sm placeholder-white/20 outline-none transition-all focus:border-violet-500/60 focus:bg-white/8 ${
-                  formErrors.password ? "border-red-500/50" : "border-white/10"
-                }`}
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={formData.password}
+                  onChange={(e) => {
+                    setFormData((p) => ({ ...p, password: e.target.value }))
+                    setFormErrors((p) => ({ ...p, password: undefined }))
+                    clearError()
+                  }}
+                  onFocus={() => setFocusedField('password')}
+                  onBlur={() => setFocusedField(null)}
+                  placeholder="••••••••"
+                  className="w-full px-3.5 py-2.5 pr-11 rounded-xl text-sm outline-none transition-all duration-200"
+                  style={{
+                    background: 'var(--bg-elevated)',
+                    border: `1px solid ${formErrors.password ? 'rgba(239,68,68,0.5)' : focusedField === 'password' ? 'rgba(124,58,237,0.5)' : 'var(--border-default)'}`,
+                    color: 'var(--text-primary)',
+                    boxShadow: focusedField === 'password' ? '0 0 0 3px rgba(124,58,237,0.08)' : 'none',
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors"
+                  style={{ color: 'var(--text-tertiary)' }}
+                >
+                  {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              </div>
               {formErrors.password && (
-                <p className="text-red-400 text-xs mt-1">{formErrors.password}</p>
+                <p className="text-xs mt-1.5" style={{ color: '#f87171' }}>{formErrors.password}</p>
               )}
             </div>
 
-            <button
+            {/* Submit */}
+            <motion.button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg px-4 py-3 text-sm transition-all duration-200 mt-2 flex items-center justify-center gap-2"
+              whileTap={{ scale: 0.98 }}
+              className="relative w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white overflow-hidden transition-opacity disabled:opacity-60 mt-1"
+              style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%)' }}
             >
+              {/* Shimmer on hover */}
+              <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-300"
+                style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 100%)' }} />
+
               {isLoading ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Signing in...
+                  <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                  <span>Signing in...</span>
                 </>
               ) : (
-                "Sign in"
+                <>
+                  <span>Sign in</span>
+                  <ArrowRight size={14} />
+                </>
               )}
-            </button>
+            </motion.button>
           </form>
 
-          <p className="text-center text-white/30 text-sm mt-6">
-            Don't have an account?{" "}
-            <Link
-              to="/signup"
-              className="text-violet-400 hover:text-violet-300 transition-colors"
-            >
-              Create one
+          <p className="text-center text-sm mt-6" style={{ color: 'var(--text-tertiary)' }}>
+            No account?{' '}
+            <Link to="/signup" className="font-medium transition-colors hover:opacity-80" style={{ color: 'var(--accent-violet-bright)' }}>
+              Create one free
             </Link>
           </p>
-        </div>
+        </motion.div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default LoginPage;
+export default LoginPage

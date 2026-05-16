@@ -203,7 +203,6 @@ export const useAuthStore = create<AuthStore>()(
 
       storage: createJSONStorage(() => localStorage),
 
-      // Persist only essential auth state
       partialize: (state) => ({
         user: state.user,
         isAuthenticated: state.isAuthenticated,

@@ -43,7 +43,8 @@ class AuthService {
       email,
       password,
     });
-
+console.log("LOGIN DATA:", data)
+console.log("LOGIN ERROR:", error)
     if (error) {
       return { user: null, error: this.formatError(error.message) };
     }

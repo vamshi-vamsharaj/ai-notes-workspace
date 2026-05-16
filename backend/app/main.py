@@ -4,13 +4,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.middleware.auth_middleware import AuthLoggingMiddleware
 from app.routers import auth
-
+from app.routers import notes
+from app.routers import tags
 app = FastAPI(
     title=settings.APP_NAME,
     docs_url="/docs",
     redoc_url="/redoc",
 )
-
+app.include_router(notes.router)
+app.include_router(tags.router)
 # ─── CORS ─────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
