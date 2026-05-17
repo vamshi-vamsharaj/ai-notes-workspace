@@ -22,7 +22,8 @@ import SignupPage from "@/pages/SignupPage";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { NotesPage } from "@/pages/NotesPage";
 import { NoteEditorPage } from "@/pages/NoteEditorPage";
-
+import { AIInsightsPage } from '@/pages/AIInsightsPage'
+import { SharedNotePage } from '@/pages/SharedNotePage'
 function App() {
 
   const initializeAuth =
@@ -136,6 +137,22 @@ function App() {
             />
           }
         />
+        <Route
+  path="/analytics"
+  element={
+    <ProtectedRoute>
+      <AppLayout>
+        <AIInsightsPage />
+      </AppLayout>
+    </ProtectedRoute>
+  }
+/>
+
+{/* PUBLIC SHARED NOTE — NO auth, NO AppLayout */}
+<Route
+  path="/shared/:token"
+  element={<SharedNotePage />}
+/>
 
         <Route
           path="*"

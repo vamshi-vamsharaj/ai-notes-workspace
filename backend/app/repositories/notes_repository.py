@@ -3,11 +3,12 @@
 # Keeps raw SQL/ORM queries out of routers and services.
 # If you ever swap SQLAlchemy for another ORM, only this file changes.
 
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession # type: ignore
 from sqlalchemy import select, func, or_, desc, asc, update
 from sqlalchemy.orm import selectinload
 from typing import Optional, List
 from uuid import UUID
+from builtins import dict, hasattr, list ,len, sum , setattr
 
 from app.models.note import Note, note_tags
 from app.models.tag import Tag

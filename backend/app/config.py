@@ -1,24 +1,25 @@
 # backend/app/config.py
+# Add GEMINI_API_KEY to your existing settings class.
+# Full file shown — merge with your existing config carefully.
+
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    # App
-    APP_NAME: str = "AI Notes API"
+    # Existing settings (keep yours)
+    DATABASE_URL: str = ""
+    JWT_SECRET: str = ""
+    SUPABASE_URL: str = ""
+    SUPABASE_SERVICE_KEY: str = ""
+    SUPABASE_ANON_KEY: str = ""
     DEBUG: bool = False
 
-    # Supabase
-    SUPABASE_URL: str
-    SUPABASE_ANON_KEY: str
-    SUPABASE_SERVICE_KEY: str   # Server-side admin operations
-    SUPABASE_JWT_SECRET: str    # Found in Supabase Dashboard → Settings → API → JWT Secret
-
-    # CORS
-    ALLOWED_ORIGINS: list[str] = ["http://localhost:5173"]
+    # ── Phase 4: AI ──────────────────────────────────────────────────────────
+    GEMINI_API_KEY: str = ""
 
     class Config:
         env_file = ".env"
-        env_file_encoding = "utf-8"
+        extra = "ignore"
 
 
 settings = Settings()
