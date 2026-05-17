@@ -8,7 +8,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, LogOut, User, Settings, ChevronDown, Menu, X, Bell } from 'lucide-react'
+import { Search, LogOut, User, Settings, ChevronDown, Menu, X  } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuthStore } from '@/store/authStore'
 import { useNotesStore } from '@/store/notesStore'

@@ -7,7 +7,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { FileText, Sparkles, Calendar, Tag, ExternalLink } from 'lucide-react'
+import { FileText, Sparkles, Calendar,  ExternalLink } from 'lucide-react'
 import { shareService } from '@/services/share.service'
 
 interface PublicNote {

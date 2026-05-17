@@ -10,10 +10,10 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, Cell,
+  Tooltip, ResponsiveContainer,
 } from 'recharts'
 import {
-  FileText, Sparkles, Tag, TrendingUp, Plus,
+  FileText, Sparkles,  TrendingUp, Plus,
   ArrowRight, Clock, Flame, Hash, Zap,
   BarChart2, BookOpen, Archive,
 } from 'lucide-react'
@@ -35,9 +35,7 @@ const TAG_PALETTE = [V_SOFT, EMERALD, AMBER, BLUE, PINK, '#f87171', '#34d399', '
 function isoToDay(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', { weekday: 'short' })
 }
-function isoToShort(iso: string) {
-  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-}
+
 function daysAgo(n: number): Date {
   const d = new Date()
   d.setDate(d.getDate() - n)
@@ -172,7 +170,6 @@ export function DashboardPage() {
   // ── Derived metrics (all from notesStore — no extra endpoints needed) ──────
 
   const metrics = useMemo(() => {
-    const now = new Date()
     const weekAgo  = daysAgo(7)
     const monthAgo = daysAgo(30)
 
@@ -227,15 +224,6 @@ export function DashboardPage() {
       .slice(0, 6)
   }, [notes, tags])
 
-  // ── AI action breakdown from notes that have summaries ────────────────────
-  const aiStats = useMemo(() => {
-    const withSummary  = notes.filter(n => n.ai_summary).length
-    const withoutSummary = Math.max(0, notes.length - withSummary)
-    return [
-      { name: 'With AI', value: withSummary,    fill: V_SOFT },
-      { name: 'Without', value: withoutSummary, fill: 'rgba(255,255,255,0.06)' },
-    ]
-  }, [notes])
 
   // ── Recent notes (top 4) ───────────────────────────────────────────────────
   const recentNotes = notes.slice(0, 4)
