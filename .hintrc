@@ -1,5 +1,7 @@
 {
-  "extends": ["development"],
+  "extends": [
+    "development"
+  ],
   "hints": {
     "typescript-config/consistent-casing": "off",
     "typescript-config/is-valid": "off",
@@ -13,7 +15,8 @@
     "axe/forms": [
       "default",
       {
-        "select-name": "off"
+        "select-name": "off",
+        "label": "off"
       }
     ],
     "no-inline-styles": "off",

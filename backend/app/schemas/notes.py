@@ -34,7 +34,7 @@ class TagResponse(TagBase):
 class NoteCreate(BaseModel):
     title: str = Field(default="Untitled", max_length=500)
     content: str = Field(default="")
-    tag_ids: Optional[List[UUID]] = Field(default=[])
+    tag_ids: List[UUID] = Field(default_factory=list)
 
 
 class NoteUpdate(BaseModel):

@@ -8,7 +8,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, LogOut, User, Settings, ChevronDown, Menu, X, Bell } from 'lucide-react'
+import { Search, LogOut, User, Settings, ChevronDown, Menu, X  } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuthStore } from '@/store/authStore'
 import { useNotesStore } from '@/store/notesStore'
@@ -73,7 +73,7 @@ export function Navbar() {
         </button>
 
         {/* Search bar */}
-        <div className="flex-1 max-w-sm relative">
+        <div className="flex-1 max-w-sm relative left-7">
           <Search
             size={13}
             className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -106,13 +106,7 @@ export function Navbar() {
 
         <div className="ml-auto flex items-center gap-1">
           {/* Notification bell — placeholder */}
-          <button
-            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5 transition-colors"
-            style={{ color: 'var(--text-tertiary)' }}
-            title="Notifications (coming soon)"
-          >
-            <Bell size={15} />
-          </button>
+          
 
           {/* Profile dropdown */}
           <div className="relative" ref={profileRef}>

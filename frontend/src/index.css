@@ -3,6 +3,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── CSS Variables ─────────────────────────────────────────────────────────── */
 :root {
   --bg-base: #08080f;
   --bg-surface: #0e0e1a;
@@ -24,58 +25,51 @@
   --scrollbar-track: transparent;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+/* ── Reset ─────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  /* Prevent elastic scroll from showing background */
+  background: var(--bg-base);
 }
 
 body {
   font-family: 'DM Sans', sans-serif;
   background: var(--bg-base);
   color: var(--text-primary);
-  min-height: 100vh;
+  /* IMPORTANT: no min-h-screen here — that's handled by AppLayout's h-screen */
   overflow-x: hidden;
 }
 
-/* Scrollbar */
+/* ── Scrollbar ────────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: var(--scrollbar-track); }
 ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 2px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.14); }
 
-/* Selection */
+/* ── Selection ────────────────────────────────────────────────────────────── */
 ::selection { background: rgba(124,58,237,0.28); color: white; }
 
-/* Dot-grid background utility */
+/* ── Utilities ────────────────────────────────────────────────────────────── */
+
 .dot-grid {
   background-image: radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 
-/* Glass panel */
 .glass {
   background: rgba(255,255,255,0.03);
-  backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
 }
 
-/* Glow effects */
 .glow-violet {
   box-shadow: 0 0 0 1px rgba(124,58,237,0.3), 0 0 20px rgba(124,58,237,0.12);
 }
 
-.glow-sm {
-  box-shadow: 0 0 0 1px var(--accent-violet), 0 0 12px rgba(124,58,237,0.25);
-}
-
-/* Gradient text */
 .gradient-text {
   background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 50%, #5b21b6 100%);
   -webkit-background-clip: text;
@@ -83,7 +77,6 @@ body {
   background-clip: text;
 }
 
-/* Note content textarea */
 .note-textarea {
   font-family: 'DM Sans', sans-serif;
   resize: none;
@@ -96,27 +89,13 @@ body {
   caret-color: var(--accent-violet-bright);
 }
 
-/* Instrument serif for display */
 .serif { font-family: 'Instrument Serif', serif; }
+.mono  { font-family: 'JetBrains Mono', monospace; }
 
-/* Mono */
-.mono { font-family: 'JetBrains Mono', monospace; }
-
-/* Focus visible utility */
-.focus-ring:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--accent-violet);
-}
-
-/* Animated gradient border */
-@keyframes border-spin {
-  to { --angle: 360deg; }
-}
-
-/* Subtle shimmer for skeletons */
+/* ── Skeleton shimmer ────────────────────────────────────────────────────── */
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
 }
 
 .skeleton {
@@ -130,22 +109,146 @@ body {
   animation: shimmer 1.6s infinite;
 }
 
-/* Fade in */
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+/* ── Page transitions ────────────────────────────────────────────────────── */
+@keyframes fade-in  { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+@keyframes scale-in { from { opacity:0; transform:scale(0.97); }     to { opacity:1; transform:scale(1); }     }
+
+.animate-fade-in  { animation: fade-in  0.3s ease forwards; }
+.animate-scale-in { animation: scale-in 0.2s ease forwards; }
+
+/* ── Scroll shadow utility ─────────────────────────────────────────────────
+   Apply .scroll-shadow to any overflow-y-auto container.
+   Shadow appears at the top when the element is scrolled.
+   Achieved via background-attachment: local on pseudo-gradients.          */
+.scroll-shadow {
+  background:
+    /* top shadow cover (hides gradient when at top) */
+    linear-gradient(var(--bg-surface) 30%, transparent) center top,
+    /* bottom shadow cover */
+    linear-gradient(transparent, var(--bg-surface) 70%) center bottom,
+    /* top shadow */
+    radial-gradient(farthest-side at 50% 0, rgba(0,0,0,0.35), transparent) center top,
+    /* bottom shadow */
+    radial-gradient(farthest-side at 50% 100%, rgba(0,0,0,0.35), transparent) center bottom;
+  background-repeat: no-repeat;
+  background-size: 100% 40px, 100% 40px, 100% 12px, 100% 12px;
+  background-attachment: local, local, scroll, scroll;
 }
 
-.animate-fade-in {
-  animation: fade-in 0.3s ease forwards;
+/* ── Markdown prose (dark theme) ─────────────────────────────────────────── */
+/* Used in NoteEditorPage preview mode */
+.prose-dark {
+  color: var(--text-secondary);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  max-width: none;
 }
 
-/* Scale in */
-@keyframes scale-in {
-  from { opacity: 0; transform: scale(0.97); }
-  to { opacity: 1; transform: scale(1); }
+.prose-dark h1,
+.prose-dark h2,
+.prose-dark h3,
+.prose-dark h4,
+.prose-dark h5,
+.prose-dark h6 {
+  color: var(--text-primary);
+  font-weight: 600;
+  line-height: 1.3;
+  margin-top: 1.75em;
+  margin-bottom: 0.6em;
 }
 
-.animate-scale-in {
-  animation: scale-in 0.2s ease forwards;
+.prose-dark h1 { font-size: 1.75rem; }
+.prose-dark h2 { font-size: 1.35rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.4em; }
+.prose-dark h3 { font-size: 1.1rem; }
+.prose-dark h4 { font-size: 0.95rem; }
+
+.prose-dark p { margin-bottom: 1em; }
+
+.prose-dark a {
+  color: var(--accent-violet-bright);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.prose-dark a:hover { opacity: 0.8; }
+
+.prose-dark strong { color: var(--text-primary); font-weight: 600; }
+.prose-dark em     { font-style: italic; }
+
+.prose-dark code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82em;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 5px;
+  padding: 0.15em 0.45em;
+  color: #a78bfa;
+}
+
+.prose-dark pre {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  margin: 1.25em 0;
+}
+
+.prose-dark pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.75);
+}
+
+.prose-dark blockquote {
+  border-left: 3px solid var(--accent-violet);
+  padding-left: 1em;
+  margin: 1.25em 0;
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
+.prose-dark ul, .prose-dark ol {
+  padding-left: 1.4em;
+  margin: 0.75em 0;
+}
+.prose-dark ul { list-style-type: disc; }
+.prose-dark ol { list-style-type: decimal; }
+.prose-dark li { margin-bottom: 0.3em; }
+.prose-dark li > ul,
+.prose-dark li > ol { margin: 0.2em 0; }
+
+.prose-dark hr {
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  margin: 2em 0;
+}
+
+.prose-dark table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.25em 0;
+  font-size: 0.875rem;
+}
+.prose-dark th {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-weight: 600;
+  padding: 0.5em 0.75em;
+  border: 1px solid var(--border-subtle);
+  text-align: left;
+}
+.prose-dark td {
+  padding: 0.5em 0.75em;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+.prose-dark tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+
+/* Task list (GFM) */
+.prose-dark input[type="checkbox"] {
+  accent-color: var(--accent-violet);
+  margin-right: 0.4em;
 }

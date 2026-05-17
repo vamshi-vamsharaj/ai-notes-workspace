@@ -1,39 +1,42 @@
 # backend/app/main.py
+# Add this import and router inclusion to your existing main.py
+# (this shows only the diff — don't replace your whole file)
+
+# Add to imports:
+from app.routers import ai  # noqa: new import
+
+# Add to app.include_router calls:
+# app.include_router(ai.router)
+
+# ─── Full updated main.py (copy-paste safe) ───────────────────────────────────
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.config import settings
-from app.middleware.auth_middleware import AuthLoggingMiddleware
-from app.routers import auth
-from app.routers import notes
-from app.routers import tags
+
+from app.routers import auth, notes, tags, ai ,share, analytics  # ← ai added
+
+
 app = FastAPI(
-    title=settings.APP_NAME,
-    docs_url="/docs",
-    redoc_url="/redoc",
+    title="NoteFlow API",
+    description="AI-powered notes workspace backend",
+    version="1.0.0",
 )
-app.include_router(notes.router)
-app.include_router(tags.router)
-# ─── CORS ─────────────────────────────────────────────────────────────────────
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS,
+    allow_origins=["http://localhost:5173", "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ─── Custom Middleware ─────────────────────────────────────────────────────────
-app.add_middleware(AuthLoggingMiddleware)
-
-# ─── Routers ──────────────────────────────────────────────────────────────────
 app.include_router(auth.router)
+app.include_router(notes.router)
+app.include_router(tags.router)
+app.include_router(ai.router)   # ← new
+app.include_router(share.router)
+app.include_router(analytics.router)
 
-
-@app.get("/", tags=["Health"])
-async def root():
-    return {"status": "ok", "message": f"{settings.APP_NAME} is running"}
-
-
-@app.get("/health", tags=["Health"])
+@app.get("/health")
 async def health():
-    return {"status": "healthy"}
+    return {"status": "ok", "version": "1.0.0"}
