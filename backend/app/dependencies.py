@@ -48,3 +48,33 @@ async def get_current_user(
             detail=f"Authentication failed: {str(e)}",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    
+    # backend/app/dependencies.py  — ADD at the bottom (keep everything above unchanged)
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.database import get_db
+
+
+async def get_current_user_with_profile(
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """
+    Wraps get_current_user and ensures a profile row exists in our DB.
+    
+    WHY this instead of a middleware:
+    - Only routes that write data need this guarantee
+    - Middleware would run on every request including /health, /shared/:token
+    - Dependency injection means it only fires when explicitly declared
+    
+    All protected routes that touch notes/tags/AI use this instead of
+    get_current_user directly. Auth-only routes (like /auth/me) keep
+    using get_current_user.
+    """
+    from app.repositories.profile_repository import ProfileRepository
+
+    repo = ProfileRepository(db)
+    await repo.upsert(
+        user_id=current_user["id"],
+        email=current_user["email"],
+    )
+    return current_user

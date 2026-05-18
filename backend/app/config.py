@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     SUPABASE_URL: str = ""
     SUPABASE_SERVICE_KEY: str = ""
     SUPABASE_ANON_KEY: str = ""
+    SUPABASE_JWT_SECRET: str = ""
     DEBUG: bool = False
 
     # ── Phase 4: AI ──────────────────────────────────────────────────────────
