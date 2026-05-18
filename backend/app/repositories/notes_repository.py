@@ -10,6 +10,7 @@ from typing import Optional, List
 from uuid import UUID
 from builtins import dict, hasattr, list ,len, sum , setattr
 
+from app.models import note
 from app.models.note import Note, note_tags
 from app.models.tag import Tag
 
@@ -26,8 +27,8 @@ class NotesRepository:
     ) -> Note:
         note = Note(user_id=user_id, title=title, content=content)
         self.db.add(note)
-        await self.db.flush()  # get the generated ID without committing
-        await self.db.refresh(note, ["tags"])
+        await self.db.commit()  # get the generated ID without committing
+        await self.db.refresh(note)
         return note
 
     async def get_by_id(self, note_id: UUID, user_id: UUID) -> Optional[Note]:
@@ -102,19 +103,26 @@ class NotesRepository:
         return list(notes), total
 
     async def update(self, note: Note, **kwargs) -> Note:
+        """
+        Allows None values to clear fields like:
+        - share_token
+        - ai_summary
+        - ai_action_items
+        """
         for key, value in kwargs.items():
-            if hasattr(note, key) and value is not None:
+            if hasattr(note, key):
                 setattr(note, key, value)
-        await self.db.flush()
-        await self.db.refresh(note, ["tags"])
-        return note
 
+        await self.db.commit()
+        await self.db.refresh(note)
+        return note
+    
     async def set_tags(self, note: Note, tags: List[Tag]) -> Note:
         note.tags = tags
-        await self.db.flush()
-        await self.db.refresh(note, ["tags"])
+        await self.db.commit()
+        await self.db.refresh(note)
         return note
 
     async def delete(self, note: Note) -> None:
         await self.db.delete(note)
-        await self.db.flush()
+        await self.db.commit()
