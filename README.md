@@ -1,373 +1,223 @@
+<div align="center">
+
 # AI Notes Workspace
 
-Collaborative AI-powered notes workspace built with **React, TypeScript, FastAPI, PostgreSQL, Supabase, SQLAlchemy, and Gemini AI APIs**.
-The platform provides intelligent note management, AI-assisted writing, analytics dashboards, markdown support, and persistent cloud-based storage.
+**A collaborative, AI-powered notes workspace with real-time insights and analytics.**
+
+Built with React, TypeScript, FastAPI, PostgreSQL, and the Gemini API.
+
+[**Live Demo →**](https://ai-notes-workspace-pi.vercel.app/)
+
+[Features](#-features) · [Tech Stack](#-tech-stack) · [Architecture](#-architecture) · [Getting Started](#-getting-started) · [API](#-api-overview)
+
+</div>
 
 ---
 
-# Features
+## Overview
 
-## Authentication
+AI Notes Workspace is a full-stack notes application that pairs a fast, distraction-free writing experience with on-demand AI assistance. Every note can be summarized, restructured into study material, turned into flashcards or a quiz, or analyzed for action items — all powered by Google's Gemini API and backed by a persistent PostgreSQL database via Supabase.
 
-* Supabase Authentication
-* JWT-based protected routes
-* Persistent login sessions
-* Public and protected route handling
-
-## Notes System
-
-* Create, edit, archive, and delete notes
-* Autosave with debounce
-* Markdown preview
-* Tags and filtering
-* Shared public notes
-
-## AI Features
-
-* Gemini AI integration
-* AI-generated summaries
-* AI insights and writing assistance
-* Persistent AI history
-* AI analytics tracking
-
-## Analytics Dashboard
-
-* Weekly activity charts
-* AI usage trends
-* Top tags
-* Productivity insights
-* Dashboard metrics with Recharts
-
-## UI/UX
-
-* Responsive SaaS-style design
-* Fixed sidebar layout
-* Scrollable AI side panel
-* Loading skeletons
-* Empty states
-* Modern Tailwind UI
+The backend follows a clean repository-based architecture (FastAPI + SQLAlchemy), and the frontend is a responsive, SaaS-style single-page app (React + Zustand + Tailwind) with a fixed sidebar, AI side panel, and a live analytics dashboard.
 
 ---
 
-# Tech Stack
+## Features
 
-## Frontend
+### 📝 Notes
+- Create, edit, archive, and delete notes
+- Debounced **autosave** — no manual save button needed
+- Full markdown support with a live preview mode
+- Tagging system with custom colors and filtering
+- Public note sharing via a unique, revocable link — no login required to view
 
-* React
-* TypeScript
-* Vite
-* Zustand
-* Tailwind CSS
-* Recharts
-* React Markdown
+### 🤖 AI Assistant
+Powered by **Gemini**, accessible from a resizable side panel (`⌘J`) on every note:
 
-## Backend
+| Action | What it does |
+|---|---|
+| Summarize | Condenses the note into a short paragraph |
+| Extract Action Items | Pulls out tasks as a checklist |
+| Generate Title | Suggests a concise, descriptive title |
+| Suggest Tags | Recommends relevant tags |
+| Improve Writing | Fixes grammar and tightens clarity |
+| Simplify | Rewrites in plain language |
+| Convert to Study Notes | Restructures into headings + bullet points |
+| Generate Flashcards | Produces flip-to-reveal Q&A cards |
+| Generate Quiz | Builds multiple-choice questions |
+| Explain | Breaks down complex content in plain terms |
 
-* FastAPI
-* SQLAlchemy
-* PostgreSQL
-* Supabase
-* Gemini AI APIs
-* Pydantic v2
+Every generation is persisted, rate-limited (20 requests/min per user), and viewable in a per-note history tab.
+
+### 📊 Analytics Dashboard
+- Weekly activity chart (notes created / edited / AI generations)
+- 30-day cumulative note growth
+- AI usage trends by action type (14-day window)
+- Top tags, writing streaks, and word-count insights
+- All computed via SQL aggregates — no client-side iteration over full datasets
+
+### 🔐 Auth & Security
+- Supabase-backed authentication with JWT verification
+- Protected routes on the frontend, dependency-injected auth checks on the backend
+- Row-level security policies on AI generation and usage tables
 
 ---
 
-# Project Architecture
+## Tech Stack
 
-```txt id="k8m2vp"
+**Frontend**
+- React 19 + TypeScript + Vite
+- Zustand for state management
+- Tailwind CSS for styling
+- Recharts for data visualization
+- React Markdown + remark-gfm for note previews
+- Framer Motion for UI animation
+
+**Backend**
+- FastAPI (fully async)
+- SQLAlchemy (async ORM) + asyncpg
+- PostgreSQL via Supabase
+- Pydantic v2 for request/response validation
+- Google Generative AI SDK (Gemini)
+
+**Infrastructure**
+- Supabase (managed Postgres + Auth)
+- Vercel (frontend + backend deployment)
+
+---
+
+## Architecture
+
+```
 Frontend (React + Zustand)
         ↓
 REST API (FastAPI)
         ↓
 Repository Layer
         ↓
-SQLAlchemy ORM
+SQLAlchemy ORM (async)
         ↓
 PostgreSQL (Supabase)
 ```
 
-The backend follows a repository-based architecture with SQLAlchemy persistence for scalable and maintainable data handling. AI generations, analytics, notes, tags, and shared content are persisted in PostgreSQL.
+The backend uses a **repository pattern**: routers never touch the database directly — all queries live in `repositories/`, keeping route handlers thin and the persistence layer swappable. AI generations, analytics, notes, tags, and shared-note state are all fully persisted (no in-memory stores), so data survives restarts.
 
----
-
-# Folder Structure
-
-```txt id="x4m7qc"
+```
 backend/
- ├── app/
- │    ├── models/
- │    ├── repositories/
- │    ├── routers/
- │    ├── schemas/
- │    ├── services/
- │    ├── middleware/
- │    ├── dependencies.py
- │    ├── database.py
- │    └── main.py
+ └── app/
+      ├── models/        # SQLAlchemy ORM models
+      ├── repositories/   # All DB queries live here
+      ├── routers/        # Thin FastAPI route handlers
+      ├── schemas/        # Pydantic request/response models
+      ├── services/       # Gemini integration, prompt templates
+      ├── middleware/      # Request logging
+      ├── dependencies.py # Auth + DB session injection
+      └── main.py
 
 frontend/
- ├── src/
- │    ├── components/
- │    ├── pages/
- │    ├── services/
- │    ├── store/
- │    ├── hooks/
- │    ├── lib/
- │    └── types/
+ └── src/
+      ├── components/     # UI components (notes, AI panel, layout, modals)
+      ├── pages/          # Route-level views
+      ├── services/       # Axios API clients
+      ├── store/          # Zustand stores (notes, AI, auth, analytics, UI)
+      ├── hooks/          # useAutosave, useDebounce
+      ├── lib/            # Supabase client, utils
+      └── types/          # Shared TypeScript types
 ```
 
 ---
 
-# Installation
+## Getting Started
 
-## 1. Clone Repository
+### Prerequisites
+- Node.js 20+
+- Python 3.12+
+- A [Supabase](https://supabase.com) project
+- A [Gemini API key](https://ai.google.dev/)
 
-```bash id="u1v9pk"
+### 1. Clone the repository
+
+```bash
 git clone https://github.com/vamshi-vamsharaj/ai-notes-workspace.git
-
 cd ai-notes-workspace
 ```
 
----
+### 2. Backend setup
 
-# Backend Setup
-
-## 1. Navigate to Backend
-
-```bash id="f6x3tm"
+```bash
 cd backend
-```
-
----
-
-## 2. Create Virtual Environment
-
-### Windows
-
-```bash id="z8m4wr"
-python -m venv venv
-
-venv\Scripts\activate
-```
-
-### Mac/Linux
-
-```bash id="m2x7qc"
 python3 -m venv venv
-
-source venv/bin/activate
-```
-
----
-
-## 3. Install Dependencies
-
-```bash id="r5v1pk"
+source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
----
+Create `backend/.env`:
 
-## 4. Configure Environment Variables
-
-Create:
-
-```txt id="y9m3tw"
-backend/.env
-```
-
-Example:
-
-```env id="c4x8vk"
+```env
 DATABASE_URL=your_postgresql_database_url
-
 SUPABASE_URL=your_supabase_project_url
-SUPABASE_KEY=your_supabase_anon_key
-
+SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_KEY=your_supabase_service_role_key
+SUPABASE_JWT_SECRET=your_supabase_jwt_secret
 GEMINI_API_KEY=your_gemini_api_key
 ```
 
----
+Run the SQL in `backend/app/database/ai_schema.sql` in your Supabase SQL editor to provision the AI tables, then start the server:
 
-## 5. Run Backend Server
-
-```bash id="g7m2qc"
+```bash
 uvicorn app.main:app --reload
 ```
 
-Backend runs at:
+Backend runs at `http://localhost:8000`.
 
-```txt id="t1v9wr"
-http://localhost:8000
-```
+### 3. Frontend setup
 
----
-
-# Frontend Setup
-
-## 1. Navigate to Frontend
-
-```bash id="p3r7tw"
+```bash
 cd frontend
-```
-
----
-
-## 2. Install Dependencies
-
-```bash id="g5x1qm"
 npm install
 ```
 
----
+Create `frontend/.env`:
 
-## 3. Configure Environment Variables
-
-Create:
-
-```txt id="c9m4vp"
-frontend/.env
-```
-
-Example:
-
-```env id="w4x9tp"
+```env
 VITE_API_URL=http://localhost:8000
-
 VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
----
-
-## 4. Run Frontend
-
-```bash id="y7m1qc"
+```bash
 npm run dev
 ```
 
-Frontend runs at:
+Frontend runs at `http://localhost:5173`.
 
-```txt id="z2v8rk"
-http://localhost:5173
-```
-
----
-
-# Database Setup
-
-This project uses:
-
-* PostgreSQL
-* Supabase
-* SQLAlchemy ORM
-
-Ensure your PostgreSQL database is configured in:
-
-```env id="w4x9tp"
-DATABASE_URL
-```
-
-The backend automatically initializes SQLAlchemy models and relationships.
-
-Persisted entities include:
-
-* Notes
-* Tags
-* AI generations
-* Shared notes
-* Analytics data
+### 4. Verify it's working
+- Sign up for an account
+- Create a note, write something, and confirm autosave kicks in
+- Open the AI panel (`⌘J`) and try **Summarize**
+- Check `/analytics` to see the dashboard populate
 
 ---
 
-# Testing the Application
+## API Overview
 
-## Frontend Build Test
+All endpoints (except `/shared/{token}`) require a `Bearer` JWT issued by Supabase.
 
-```bash id="q4x8tm"
-cd frontend
-
-npm run build
-```
-
----
-
-## Backend Test
-
-```bash id="m1v9qc"
-cd backend
-
-uvicorn app.main:app --reload
-```
-
-Verify:
-
-* notes CRUD works
-* AI generation works
-* analytics load correctly
-* persistence survives backend restart
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/auth/signup`, `/auth/login` | Account creation / login |
+| `GET` | `/notes/` | List notes (search, tag filter, sort, pagination) |
+| `POST` | `/notes/` | Create a note |
+| `PATCH` | `/notes/{id}` | Update title, content, archive state, or tags |
+| `POST` / `DELETE` | `/notes/{id}/share` | Enable / disable public sharing |
+| `GET` | `/shared/{token}` | Public, unauthenticated note view |
+| `POST` | `/ai/generate` | Run an AI action against a note |
+| `GET` | `/ai/history/{note_id}` | Past AI generations for a note |
+| `GET` | `/analytics/summary` `/weekly` `/growth` `/ai-trends` | Dashboard data |
 
 ---
 
-# Key Features Demonstration
 
-## Notes
+## License
 
-* Create and edit notes
-* Autosave updates
-* Archive functionality
-* Tag filtering
-
-## AI
-
-* Generate summaries
-* AI insights
-* Persistent AI history
-
-## Dashboard
-
-* Analytics charts
-* Weekly activity
-* AI trends
-* Productivity metrics
-
----
-
-# Production Improvements Implemented
-
-* SQLAlchemy PostgreSQL persistence
-* Repository architecture
-* Async database flow
-* Persistent analytics storage
-* Persistent AI history
-* Scalable backend structure
-* Responsive SaaS UI
-
----
-
-# Future Improvements
-
-* Real-time collaboration
-* WebSocket synchronization
-* Alembic migrations
-* Redis caching
-* Team workspaces
-* Role-based permissions
-
----
-
-# License
-
-This project is licensed under the MIT License.
-
----
-
-# Author
-
-Vamshi Vamsharaj
-
-GitHub Repository:
-
-[ai-notes-workspace Repository](https://github.com/vamshi-vamsharaj/ai-notes-workspace?utm_source=chatgpt.com)
-
-Project structure referenced from uploaded architecture overview. 
+MIT © [Vamshi Vamsharaj](https://github.com/vamshi-vamsharaj)
